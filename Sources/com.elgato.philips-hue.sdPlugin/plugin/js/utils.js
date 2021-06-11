@@ -128,7 +128,7 @@ function sendToPlugin(inAction, inContext, inData) {
             'context': inContext,
             'payload': inData
         };
-
+		console.log('via utils.js/sendToPlugin: ' + JSON.stringify(json));
         websocket.send(JSON.stringify(json));
     }
 }

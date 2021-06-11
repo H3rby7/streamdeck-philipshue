@@ -554,6 +554,8 @@ function Illumination(bridge = null, id = null, name = null, type = null, power 
         // Define state object
         var state = {};
         state.on = power;
+        state.transitiontime = 1;
+        state.bri = 254;
 
         // Send new state
         instance.setState(state, callback);

@@ -16,6 +16,8 @@ var cache = {};
 // Global settings
 var globalSettings = {};
 
+var erzählerActive = false;
+
 // Setup the websocket and handle communication
 function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, inInfo) {
     // Create array of currently used actions
@@ -36,7 +38,7 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
         // Request the global settings of the plugin
         requestGlobalSettings(inPluginUUID);
     }
-
+	
     // Add event listener
     document.addEventListener('newCacheAvailable', function() {
         // When a new cache is available
@@ -64,12 +66,16 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
 
                 // Inform PI of new cache
                 sendToPropertyInspector(action, inContext, cache.data);
+				//console.log('Plugin/main: Inform PI of new cache: ' + JSON.stringify(cache.data)); 
             });
         });
     }, false);
 
     // Web socked received a message
     websocket.onmessage = function(inEvent) {
+		
+		//console.log('global settings: ' + JSON.stringify(globalSettings));
+		
         // Parse parameter from string to object
         var jsonObj = JSON.parse(inEvent.data);
 
@@ -79,9 +85,12 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
         var context = jsonObj['context'];
         var jsonPayload = jsonObj['payload'];
         var settings;
+		
+		
 
         // Key up event
         if(event === 'keyUp') {
+			
             settings = jsonPayload['settings'];
             var coordinates = jsonPayload['coordinates'];
             var userDesiredState = jsonPayload['userDesiredState'];
@@ -139,6 +148,8 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
         else if(event === 'didReceiveGlobalSettings') {
             // Set global settings
             globalSettings = jsonPayload['settings'];
+			
+			
 
             // If at least one action is active
             if(Object.keys(actions).length > 0) {
@@ -163,7 +174,7 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
         }
         else if(event === 'sendToPlugin') {
             var piEvent = jsonPayload['piEvent'];
-
+			
             if (piEvent === 'valueChanged') {
                 // Only color, brightness and scene support live preview
                 if(action !== 'com.elgato.philips-hue.power' && action !== 'com.elgato.philips-hue.cycle') {
@@ -173,6 +184,15 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
                     }
                 }
             }
+			
+			// (_m) receive changed override value from property inspector
+			var overrideValue = jsonPayload['overrideValue'];			
+			if (overrideValue !== undefined) {
+				console.log('overrideValue: ' + overrideValue);								
+				if (context in actions) {
+                        actions[context].setPriority(overrideValue);											
+                    }
+            }			
         }
     };
 }

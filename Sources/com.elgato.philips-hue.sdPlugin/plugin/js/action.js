@@ -44,6 +44,7 @@ function Action(inContext, inSettings) {
 
     // Private function to set the defaults
     function setDefaults(inCallback) {
+		
         // If at least one bridge is paired
         if (!(Object.keys(cache.data).length > 0)) {
             // If a callback function was given
@@ -118,6 +119,18 @@ function Action(inContext, inSettings) {
                 saveSettings(action, inContext, settings);
             }
         }
+		
+		// (_m) if no priority is set for this action
+		if (!('priority' in settings)) {
+			//apperently, this never gets executed. dunno why
+			settings.priority = 'Dummy';
+			saveSettings(action, inContext, settings);
+			console.log('action.js: settings.priority set to ' + settings.priority);
+			
+			
+		} else {
+			//console.log('action.js: settings.priority = ' + settings.priority + ' for light ' + settings.light);
+		}
 
         // If a callback function was given
         if (inCallback !== undefined) {
